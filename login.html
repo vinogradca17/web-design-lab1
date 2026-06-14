@@ -28,12 +28,12 @@
         </nav>
     </header>
 
-    <main class="container my-5 flex-grow-1 d-flex align-items-center justify-content-center">
+    <main class="container My-5 flex-grow-1 d-flex align-items-center justify-content-center">
         <div class="col-md-6 col-lg-4">
             <div class="card shadow-sm">
                 <div class="card-body p-4">
                     <h2 class="text-center mb-4">Вхід до сайту</h2>
-                    <form>
+                    <form id="loginForm">
                         <div class="mb-3">
                             <label for="loginEmail" class="form-label fw-bold">Email</label>
                             <input type="email" class="form-control" id="loginEmail" placeholder="name@example.com">
@@ -43,7 +43,7 @@
                             <input type="password" class="form-control" id="loginPassword" placeholder="Введіть пароль">
                         </div>
                         <div class="d-grid">
-                            <button type="button" class="btn btn-primary btn-lg">Увійти</button>
+                            <button type="button" id="loginBtn" class="btn btn-primary btn-lg">Увійти</button>
                         </div>
                         <div class="text-center mt-3">
                             <small>Немає акаунта? <a href="register.html" class="text-decoration-none">Зареєструватися</a></small>
@@ -61,5 +61,75 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        class UserModel {
+            getUsers() {
+                const users = localStorage.getItem('users');
+                return users ? JSON.parse(users) : [];
+            }
+
+            loginUser(email, password) {
+                const users = this.getUsers();
+                const user = users.find(u => u.email === email && u.password === password);
+                
+                if (user) {
+                    localStorage.setItem('currentUser', JSON.stringify(user));
+                    return { success: true };
+                }
+                return { success: false, message: 'Неправильний Email або пароль!' };
+            }
+        }
+
+        class LoginView {
+            constructor() {
+                this.emailInput = document.getElementById('loginEmail');
+                this.passwordInput = document.getElementById('loginPassword');
+                this.loginBtn = document.getElementById('loginBtn');
+            }
+
+            bindLogin(handler) {
+                if (!this.loginBtn) return;
+
+                this.loginBtn.addEventListener('click', () => {
+                    const email = this.emailInput.value.trim();
+                    const password = this.passwordInput.value;
+
+                    if (!email || !password) {
+                        alert('Будь ласка, введіть Email та пароль.');
+                        return;
+                    }
+
+                    handler(email, password);
+                });
+            }
+
+            redirectToProfile() {
+                window.location.href = 'profile.html';
+            }
+        }
+
+        class LoginController {
+            constructor(model, view) {
+                this.model = model;
+                this.view = view;
+
+                this.view.bindLogin(this.handleLogin.bind(this));
+            }
+
+            handleLogin(email, password) {
+                const result = this.model.loginUser(email, password);
+
+                if (result.success) {
+                    this.view.redirectToProfile();
+                } else {
+                    alert(result.message);
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const app = new LoginController(new UserModel(), new LoginView());
+        });
+    </script>
 </body>
 </html>
